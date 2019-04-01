@@ -1,0 +1,3 @@
+#!/bin/bash
+/home/twitwig/challenge_cyber_pastel/venvs/askformd5-client/bin/python /home/twitwig/challenge_cyber_pastel/venvs/askformd5-client/wrong.py 2>&1 &
+/usr/bin/sl -F
