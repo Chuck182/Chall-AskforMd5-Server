@@ -23,7 +23,7 @@ class NewClientHandler(threading.Thread):
     self._addr = addr
     self._thread_exit_flag = False
     self._state = NewClientHandler.INIT_STATE
-    self._counter = NewClientHandler.NB_OF_REQUESTS
+    self._counter = 1
     self._last_string = "nothing"
     self._last_hash = "nothing"
     self._request_time = time.time() 
@@ -59,10 +59,11 @@ class NewClientHandler(threading.Thread):
             self.terminate()
         elif self._state == NewClientHandler.STARTED_STATE:
           delay = self.get_millis() - self._request_time
-          if NewClientHandler.MIN_RESPONSE_TIME << delay << NewClientHandler.MAX_RESPONSE_TIME:
+          print ("Delay is "+str(delay))
+          if delay > NewClientHandler.MIN_RESPONSE_TIME and delay < NewClientHandler.MAX_RESPONSE_TIME:
             if data == self._last_hash:
-              if self._counter > 0:
-                self._counter -= self._counter
+              if self._counter < NewClientHandler.NB_OF_REQUESTS:
+                self._counter += 1
                 self.send_request()
               else:
                 self.display_flag()
@@ -81,14 +82,15 @@ class NewClientHandler(threading.Thread):
 
   def send_request(self):
     request =  self.string_generator().encode()
-    self._conn.sendall(b"MD5 of "+request+b" ?"+b'\n')
+    self._conn.sendall(b"("+str(self._counter).encode()+b"/20) "+b"MD5 of "+request+b" ?"+b'\n')
     self._request_time = self.get_millis()
+    print ("millis = "+str(self._request_time))
 
   def display_flag(self):
-    self._conn.sendall(NewClientHandler.FLAG.encode()+b'\n')
+    self._conn.sendall(b"Well done. "+NewClientHandler.FLAG.encode()+b'\n')
     self.terminate() 
        
-  def string_generator(self, size=40, chars=string.ascii_uppercase + string.digits):
+  def string_generator(self, size=40, chars=string.ascii_uppercase + string.ascii_lowercase + string.digits):
     request = ''.join(random.choice(chars) for _ in range(size))
     self._last_string = request
     self._last_hash = hashlib.md5(request.encode("utf-8")).hexdigest()
